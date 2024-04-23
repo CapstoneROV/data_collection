@@ -1,0 +1,35 @@
+<!-- Launch file to test relative movement of the drone. The drone will move to a specified depth, roll, pitch, and yaw. The script is called by the launch file. The launch file is called by the main launch file. The main launch file is called by the main script. The main script
+As well as log the data, the script will also plot the data -->
+<launch>
+    <!-- Define arguments with defaults -->
+    <arg name="mavlink_url_2" default="udpin:0.0.0.0:14551"/>
+    <arg name="x_pos" default="10"/>
+    <arg name="y_pos" default="0"/>
+    <arg name="z_pos" default="0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="0"/>
+    <arg name="mavlink_url" default="udpin:0.0.0.0:14552"/>
+    <arg name="save_path" default="$(find data_collection)/data/raw_imu_data.txt"/>
+    <arg name="message_frequency" default="4"/>
+
+    <!-- Include test_relative_movement.launch with parameters -->
+    <include file="$(find data_collection)/launch/mavlink_test.launch">
+        <arg name="mavlink_url" value="$(arg mavlink_url)"/>
+        <arg name="x_pos" value="$(arg x_pos)"/>
+        <arg name="y_pos" value="$(arg y_pos)"/>
+        <arg name="z_pos" value="$(arg z_pos)"/>
+        <arg name="roll" value="$(arg roll)"/>
+        <arg name="pitch" value="$(arg pitch)"/>
+        <arg name="yaw" value="$(arg yaw)"/>
+        <arg name= "use_global_coordinates" default="false"/>
+    </include>
+
+    <!-- Include logger.launch with parameters -->
+    <include file="$(find data_collection)/launch/logger.launch">
+        <arg name="mavlink_url" value="$(arg mavlink_url_2)"/>
+        <arg name="save_path" value="$(arg save_path)"/>
+        <arg name="message_frequency" value="$(arg message_frequency)"/>
+    </include>
+
+</launch>

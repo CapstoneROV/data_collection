@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Script to request and get RAW_IMU data from the BlueROV2, then store it in a numpy array as a ROS Node
+# Script to request and get LOCAL_POSITION_NED data from the BlueROV2, then store it in a numpy array as a ROS Node
 import rospy
 from pymavlink import mavutil
 import numpy as np
@@ -8,23 +8,23 @@ def request_message_interval(master, frequency_hz):
     master.mav.command_long_send(
         master.target_system, master.target_component,
         mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL, 0,
-        mavutil.mavlink.MAVLINK_MSG_ID_RAW_IMU,
+        mavutil.mavlink.MAVLINK_MSG_ID_LOCAL_POSITION_NED,
         1e6 / frequency_hz,
         0,
         0, 0, 0, 0
     )
     rospy.loginfo("Requested the message successfully.")
 
-def get_raw_imu_data(master, save_name):
+def get_local_position_ned_data(master, save_name):
     message_index = 0
-    data_array = np.empty((0, 3), int)
+    data_array = np.empty((0, 4), int)  # Assuming we're storing x, y, z, and time_boot_ms
     try:
         while not rospy.is_shutdown():
-            msg = master.recv_match(type='RAW_IMU', blocking=True, timeout=5)
+            msg = master.recv_match(type='LOCAL_POSITION_NED', blocking=True, timeout=5)
             if msg:
-                xacc, yacc, zacc = msg.to_dict()['xacc'], msg.to_dict()['yacc'], msg.to_dict()['zacc']
-                rospy.loginfo("Message index: %d, Xacc: %d, Yacc: %d, Zacc: %d", message_index, xacc, yacc, zacc)
-                data_point = np.array([[xacc, yacc, zacc]])
+                x, y, z, time_boot_ms = msg.to_dict()['x'], msg.to_dict()['y'], msg.to_dict()['z'], msg.to_dict()['time_boot_ms']
+                rospy.logdebug("Message index: %d, X: %f, Y: %f, Z: %f, Timestamp: %d", message_index, x, y, z, time_boot_ms)
+                data_point = np.array([[x, y, z, time_boot_ms]])
                 data_array = np.append(data_array, data_point, axis=0)
                 message_index += 1
     except Exception as e:
@@ -35,11 +35,11 @@ def get_raw_imu_data(master, save_name):
         rospy.loginfo("Exiting & Saving data to %s.", save_name)
 
 if __name__ == '__main__':
-    rospy.init_node('blue_rov_imu_data_collector')
+    rospy.init_node('blue_rov_position_data_collector', log_level=rospy.DEBUG);
 
     # Read parameters
-    connection_string = rospy.get_param('~mavlink_conn', 'udpin:localhost:14550')
-    data_save_path = rospy.get_param('~save_path', 'raw_imu_data.txt')
+    connection_string = rospy.get_param('~mavlink_url', 'udpin:localhost:14550')
+    data_save_path = rospy.get_param('~save_path', 'local_position_ned_data.txt')
     message_frequency = rospy.get_param('~message_frequency', 4) # Frequency in Hz
 
     rospy.loginfo("Connecting to MAVLink on %s", connection_string)
@@ -51,6 +51,6 @@ if __name__ == '__main__':
         master.wait_heartbeat()
         rospy.loginfo("Heartbeat from system (system %u component %u)", master.target_system, master.target_component)
         request_message_interval(master, message_frequency)
-        get_raw_imu_data(master, data_save_path)
+        get_local_position_ned_data(master, data_save_path)
     except Exception as e:
-        rospy.loginfo("Whoops an error occured, whomp whomp: %s", e)
+        rospy.loginfo("Whoops an error occurred, whomp whomp: %s", e)

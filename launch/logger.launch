@@ -5,11 +5,20 @@
     <arg name="save_path" default="$(find data_collection)/data/raw_imu_data.txt"/>
     <!-- Input argument for the frequency to request RAW_IMU messages -->
     <arg name="message_frequency" default="4"/>
+
     <!-- Node to collect RAW_IMU data from MAVLink -->
-    <node name="imu_data_collector" pkg="data_collection" type="log.py" output="screen">
+    <node name="imu_data_collector" pkg="data_collection" type="log_imu.py" output="screen">
         <!-- Setting the parameters using the input arguments -->
-        <param name="mavlink_conn" value="$(arg mavlink_conn)"/>
+        <param name="mavlink_url" value="$(arg mavlink_url)"/>
         <param name="save_path" value="$(arg save_path)"/>
+        <param name="message_frequency" value="$(arg message_frequency)"/>
+    </node>
+
+    <!-- Node to log LOCAL_POSITION_NED from MAVLink -->
+    <node name="local_position_collector" pkg="data_collection" type="log_pos.py" output="screen">
+        <!-- Setting the parameters using the input arguments -->
+        <param name="mavlink_url" value="$(arg mavlink_url)"/>
+        <param name="save_path" value="$(find data_collection)/data/local_position_data.txt"/>
         <param name="message_frequency" value="$(arg message_frequency)"/>
     </node>
 </launch>

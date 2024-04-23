@@ -1,0 +1,4 @@
+# parameters.yaml
+use_global_coordinates: false
+points: [[1, 0, 0], [-1, 0, 0]]
+calibrate: false

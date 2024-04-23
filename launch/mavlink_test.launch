@@ -1,15 +1,16 @@
 <launch>
     <!-- Define arguments with default values -->
-    <arg name="mavlink_url" default="udpin:0.0.0.0:14550"/>
-    <arg name="x_pos" default="-10"/>
+    <arg name="mavlink_url" default="udpin:0.0.0.0:14551"/>
+    <arg name="x_pos" default="10"/>
     <arg name="y_pos" default="0"/>
-    <arg name="z_pos" default="-10"/>
+    <arg name="z_pos" default="0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="0"/>
+    <arg name= "use_global_coordinates" default="false"/>
 
     <!-- Node configuration -->
-    <node name="mavlink_interface_node" pkg="your_package_name" type="your_script_name.py" output="screen">
+    <node name="mavlink_interface_node" pkg="data_collection" type="mavlink_goto.py" output="screen">
         <!-- Passing arguments as parameters -->
         <param name="mavlink_url" value="$(arg mavlink_url)"/>
         <param name="x_pos" value="$(arg x_pos)"/>
@@ -18,5 +19,6 @@
         <param name="roll" value="$(arg roll)"/>
         <param name="pitch" value="$(arg pitch)"/>
         <param name="yaw" value="$(arg yaw)"/>
+        <param name="use_global_coordinates" value="$(arg use_global_coordinates)"/>
     </node>
 </launch>
