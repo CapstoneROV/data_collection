@@ -1,0 +1,25 @@
+<!-- Launch file to test relative movement of the drone. The drone will move to a specified depth, roll, pitch, and yaw. The script is called by the launch file. The launch file is called by the main launch file. The main launch file is called by the main script. The main script
+As well as log the data, the script will also plot the data -->
+<launch>
+    <!-- Define arguments with defaults -->
+    <arg name="mavlink_url_2" default="udpin:127.0.0.1:14552"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="0"/>
+    <arg name="mavlink_url" default="udpin:0.0.0.0:14551"/>
+    <arg name="save_path" default="$(find data_collection)/data/raw_imu_data.txt"/>
+    <arg name="message_frequency" default="1"/>
+
+    <!-- Include test_relative_movement.launch with parameters -->
+    <include file="$(find data_collection)/launch/mavlink_test_square.launch">
+        <arg name="mavlink_url" value="$(arg mavlink_url)"/>
+    </include>
+
+    <!-- Include logger.launch with parameters -->
+    <include file="$(find data_collection)/launch/logger.launch">
+        <arg name="mavlink_url" value="$(arg mavlink_url_2)"/>
+        <arg name="save_path" value="$(arg save_path)"/>
+        <arg name="message_frequency" value="$(arg message_frequency)"/>
+    </include>
+
+</launch>
