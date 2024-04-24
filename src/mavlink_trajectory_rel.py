@@ -104,9 +104,6 @@ if __name__ == '__main__':
             calibrate_sensors(master)
 
         initial_position = get_initial_position(master)
-        # arm_and_wait(master)
-        # rospy.sleep(5)
-        # set_guided_mode(master)
         arm_and_set_mode(master, 'GUIDED')
         rospy.sleep(7) # Guided does odd things so wait.
         navigate_through_points(master, points, initial_position)

@@ -4,7 +4,7 @@
    
 
     <!-- Node configuration -->
-    <node name="mavlink_interface_node" pkg="data_collection" type="mavlink_trajectory_rel.py" output="screen">
+    <node name="mavlink_interface_node" pkg="data_collection" type="mavlink_trajectory.py" output="screen">
         <rosparam file="$(find data_collection)/config/bf_path.yaml" command="load" />
         <!-- Passing arguments as parameters -->
         <param name="mavlink_url" value="$(arg mavlink_url)"/>
