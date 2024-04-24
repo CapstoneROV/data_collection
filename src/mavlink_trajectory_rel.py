@@ -43,7 +43,7 @@ def spin_till_position_reached(master, x, y, z):
             break
 
 def set_target_position(master, x, y, z, use_global, initial_position):
-    x_rel, y_rel, z_rel = x - initial_position[0], y - initial_position[1], z - initial_position[2]
+    x_rel, y_rel, z_rel = x + initial_position[0], y + initial_position[1], z + initial_position[2]
     rospy.loginfo("Setting target local position to X: %f, Y: %f, Z: %f", x_rel, y_rel, z_rel)
     master.mav.set_position_target_local_ned_send(
         int(1e3 * (time.time() - boot_time)),
