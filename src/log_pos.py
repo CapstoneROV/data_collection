@@ -41,7 +41,6 @@ if __name__ == '__main__':
     connection_string = rospy.get_param('~mavlink_url', 'udpin:localhost:14550')
     data_save_path = rospy.get_param('~save_path', 'local_position_ned_data.txt')
     message_frequency = rospy.get_param('~message_frequency', 4) # Frequency in Hz
-
     rospy.loginfo("Connecting to MAVLink on %s", connection_string)
 
     # Connect to master
