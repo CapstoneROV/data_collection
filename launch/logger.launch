@@ -1,6 +1,6 @@
 <launch>
     <!-- Input argument for MAVLink connection string -->
-    <arg name="mavlink_url" default="udpin:0.0.0.0:14550"/>
+    <arg name="mavlink_url" default="udpin:0.0.0.0:14553"/>
     <!-- Input argument for the path to save the RAW_IMU data -->
     <arg name="save_path" default="$(find data_collection)/data/raw_imu_data.txt"/>
     <!-- Input argument for the frequency to request RAW_IMU messages -->

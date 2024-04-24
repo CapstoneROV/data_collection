@@ -66,6 +66,24 @@ def disarm_and_wait(master):
     master.arducopter_disarm()
     master.motors_disarmed_wait()
 
+# Function to send mavlink message to bluerov2 to go to GUIDED mode
+# def set_guided_mode(master):
+#     # Use pymavlink to set to GUIDED mode
+#     # USE PYMAVLINK NOT MAVROS
+#     master.mav.command_long_send(
+#         master.target_system, master.target_component,
+#         mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
+#         mavutil.mavlink.MAV_MODE_GUIDED_ARMED,
+#         0, 0, 0, 0, 0, 0)  # MAV_MODE_GUIDED_ARMED = 4
+#     rospy.loginfo("Set mode to GUIDED")
+# Function to send mavlink message to bluerov2 to go to GUIDED mode
+def arm_and_set_mode(master, mode_name):
+    print(f"Arming vehicle and setting mode to {mode_name}...")
+    master.arducopter_arm()
+    master.motors_armed_wait()
+    mode_id = master.mode_mapping()[mode_name]
+    master.set_mode(mode_id)
+    print("Vehicle is armed and mode is set!")
 if __name__ == '__main__':
     try:
         rospy.init_node('mavlink_navigation_node', anonymous=True)
@@ -83,7 +101,9 @@ if __name__ == '__main__':
 
         arm_and_wait(master)
         rospy.sleep(5)
-        navigate_through_points(master, points)
+        set_guided_mode(master)
+        rospy.sleep(5)
+        navigate_through_points(master, points, use_global=False)
         disarm_and_wait(master)
 
     except rospy.ROSInterruptException:

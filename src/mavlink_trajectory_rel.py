@@ -42,7 +42,7 @@ def spin_till_position_reached(master, x, y, z):
             rospy.loginfo("Position reached!")
             break
 
-def set_target_position(master, x, y, z, use_global, initial_position):
+def set_target_position(master, x, y, z, initial_position):
     x_rel, y_rel, z_rel = x + initial_position[0], y + initial_position[1], z + initial_position[2]
     rospy.loginfo("Setting target local position to X: %f, Y: %f, Z: %f", x_rel, y_rel, z_rel)
     master.mav.set_position_target_local_ned_send(
@@ -54,9 +54,10 @@ def set_target_position(master, x, y, z, use_global, initial_position):
 def navigate_through_points(master, points, initial_position):
     for point in points:
         rospy.loginfo("Navigating to point: %s", str(point))
-        set_target_position(master, *point, False, initial_position)
+        set_target_position(master, *point, initial_position=initial_position)
+        initial_position = get_initial_position(master)  # Update initial position
         rospy.loginfo("Waiting to reach the target point...")
-        rospy.sleep(50)  # Wait time may need adjustment based on vehicle speed and distance
+        rospy.sleep(20)  # Wait time may need adjustment based on vehicle speed and distance
 
 def arm_and_wait(master):
     rospy.loginfo("Arming vehicle...")
@@ -67,6 +68,25 @@ def disarm_and_wait(master):
     rospy.loginfo("Disarming vehicle...")
     master.arducopter_disarm()
     master.motors_disarmed_wait()
+
+# Function to send mavlink message to bluerov2 to go to GUIDED mode
+def set_guided_mode(master):
+    # Use pymavlink to set to GUIDED mode
+    # USE PYMAVLINK NOT MAVROS
+    master.mav.command_long_send(
+        master.target_system, master.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
+        mavutil.mavlink.MAV_MODE_GUIDED_ARMED,
+        0, 0, 0, 0, 0, 0)  # MAV_MODE_GUIDED_ARMED = 4
+    rospy.loginfo("Set mode to GUIDED")
+
+def arm_and_set_mode(master, mode_name):
+    # print(f"Arming vehicle and setting mode to {mode_name}...")
+    master.arducopter_arm()
+    master.motors_armed_wait()
+    mode_id = master.mode_mapping()[mode_name]
+    master.set_mode(mode_id)
+    print("Vehicle is armed and mode is set!")
 
 if __name__ == '__main__':
     try:
@@ -84,8 +104,11 @@ if __name__ == '__main__':
             calibrate_sensors(master)
 
         initial_position = get_initial_position(master)
-        arm_and_wait(master)
-        rospy.sleep(5)
+        # arm_and_wait(master)
+        # rospy.sleep(5)
+        # set_guided_mode(master)
+        arm_and_set_mode(master, 'GUIDED')
+        rospy.sleep(7) # Guided does odd things so wait.
         navigate_through_points(master, points, initial_position)
         disarm_and_wait(master)
 
