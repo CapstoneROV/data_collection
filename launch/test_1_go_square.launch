@@ -6,7 +6,7 @@ As well as log the data, the script will also plot the data -->
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="0"/>
-    <arg name="mavlink_url" default="udpin:0.0.0.0:14551"/>
+    <arg name="mavlink_url" default="udpin:0.0.0.0:14553"/>
     <arg name="save_path" default="$(find data_collection)/data/raw_imu_data.txt"/>
     <arg name="message_frequency" default="1"/>
 

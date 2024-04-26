@@ -73,11 +73,18 @@ def disarm_and_wait(master):
 def set_guided_mode(master):
     # Use pymavlink to set to GUIDED mode
     # USE PYMAVLINK NOT MAVROS
-    master.mav.command_long_send(
-        master.target_system, master.target_component,
-        mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
-        mavutil.mavlink.MAV_MODE_GUIDED_ARMED,
-        0, 0, 0, 0, 0, 0)  # MAV_MODE_GUIDED_ARMED = 4
+    # master.mav.command_long_send(
+    #     master.target_system, master.target_component,
+    #     mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
+    #     mavutil.mavlink.MAV_MODE_GUIDED_ARMED,
+    #     0, 0, 0, 0, 0, 0)  # MAV_MODE_GUIDED_ARMED = 4
+    master.arducopter_arm()
+    master.motors_armed_wait()
+    DEPTH_HOLD = 'GUIDED'
+    DEPTH_HOLD_MODE = master.mode_mapping()['GUIDED']
+    DEPTH_HOLD_MODE = master.mode_mapping()[DEPTH_HOLD]
+    while not master.wait_heartbeat().custom_mode == DEPTH_HOLD_MODE:
+        master.set_mode(DEPTH_HOLD)
     rospy.loginfo("Set mode to GUIDED")
 
 def arm_and_set_mode(master, mode_name):
@@ -86,6 +93,8 @@ def arm_and_set_mode(master, mode_name):
     master.motors_armed_wait()
     mode_id = master.mode_mapping()[mode_name]
     master.set_mode(mode_id)
+    while not master.wait_heartbeat().custom_mode == mode_id:
+        master.set_mode(mode_id)
     print("Vehicle is armed and mode is set!")
 
 if __name__ == '__main__':
@@ -105,7 +114,8 @@ if __name__ == '__main__':
 
         initial_position = get_initial_position(master)
         arm_and_set_mode(master, 'GUIDED')
-        rospy.sleep(7) # Guided does odd things so wait.
+        # rospy.sleep(7) # Guided does odd things so wait.
+        # Agressively set 
         navigate_through_points(master, points, initial_position)
         disarm_and_wait(master)
 

@@ -1,4 +1,4 @@
 # parameters.yaml
 use_global_coordinates: false
-points: [[1, 0, 0.5], [1, 1, 0.5], [0, 1, 0.5], [0, 0, 0.5]] # Point in square formation relative to local frame
+points: [[0,0,1.5], [2, 0, 1.5], [2, 2, 1.5], [0,2,1.5], [0, 0, 1.5]] # Point in square formation relative to local frame
 calibrate: false

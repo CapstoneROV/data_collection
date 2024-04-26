@@ -25,7 +25,16 @@ def get_initial_position(master):
     else:
         rospy.logwarn("Failed to fetch initial position!")
         return 0, 0, 0  # Fallback to origin if no position is received
-
+    
+def get_initial_orientation(master):
+    rospy.loginfo("Fetching initial orientation...")
+    attitude = master.recv_match(type='ATTITUDE', blocking=True)
+    if attitude:
+        return attitude.roll, attitude.pitch, attitude.yaw
+    else:
+        rospy.logwarn("Failed to fetch initial orientation!")
+        return 0, 0, 0
+    
 def isclose(a, b, abs_tol=0.0):
     return abs(a-b) <= abs_tol
 
@@ -38,12 +47,15 @@ def spin_till_position_reached(master, x, y, z):
         x_pos = pos_NED.x
         y_pos = pos_NED.y
         z_pos = pos_NED.z
-        if isclose(x_pos, x, abs_tol=1e-5) and isclose(y_pos, y, abs_tol=1e-5) and isclose(z_pos, z, abs_tol=1e-5):
+        if isclose(x_pos, x, abs_tol=2e-1) and isclose(y_pos, y, abs_tol=2e-1) and isclose(z_pos, z, abs_tol=2e-1):
             rospy.loginfo("Position reached!")
             break
 
-def set_target_position(master, x, y, z, initial_position):
+def set_target_position(master, x, y, z, initial_position, initial_orientation):
+    # Transform to x,y,z rpy origin
     x_rel, y_rel, z_rel = x + initial_position[0], y + initial_position[1], z + initial_position[2]
+    # Transform to x,y,z rpy target
+    x_rel, y_rel, z_rel = x_rel * math.cos(initial_orientation[2]) - y_rel * math.sin(initial_orientation[2]), x_rel * math.sin(initial_orientation[2]) + y_rel * math.cos(initial_orientation[2]), z_rel
     rospy.loginfo("Setting target local position to X: %f, Y: %f, Z: %f", x_rel, y_rel, z_rel)
     master.mav.set_position_target_local_ned_send(
         int(1e3 * (time.time() - boot_time)),
@@ -51,12 +63,13 @@ def set_target_position(master, x, y, z, initial_position):
         mavutil.mavlink.MAV_FRAME_LOCAL_NED,
         0b0000111111111000, x_rel, y_rel, z_rel, 0, 0, 0, 0, 0, 0, 0, 0)
 
-def navigate_through_points(master, points, initial_position):
+def navigate_through_points(master, points, initial_position, initial_orientation):
     for point in points:
         rospy.loginfo("Navigating to point: %s", str(point))
-        set_target_position(master, *point, initial_position=initial_position)
+        set_target_position(master, *point, initial_position=initial_position, initial_orientation=initial_orientation);
         rospy.loginfo("Waiting to reach the target point...")
-        rospy.sleep(20)  # Wait time may need adjustment based on vehicle speed and distance
+        rospy.sleep(15)  # Wait time may need adjustment based on vehicle speed and distance
+        # spin_till_position_reached(master, *point)
 
 def arm_and_wait(master):
     rospy.loginfo("Arming vehicle...")
@@ -86,6 +99,8 @@ def arm_and_set_mode(master, mode_name):
     mode_id = master.mode_mapping()[mode_name]
     master.set_mode(mode_id)
     print("Vehicle is armed and mode is set!")
+    while not master.wait_heartbeat().custom_mode == mode_id:
+        master.set_mode(mode_name)
 
 if __name__ == '__main__':
     try:
@@ -101,9 +116,16 @@ if __name__ == '__main__':
         rospy.loginfo("Connected to MAVLink on %s", connection_url)
         if calibrate:
             calibrate_sensors(master)
+        
+        
+        arm_and_set_mode(master, 'GUIDED') # Set to GUIDED mode
+        # Quickly force it to start at that point(or guided will push ROV into a dive)
         initial_position = get_initial_position(master)
-        arm_and_set_mode(master, 'GUIDED')
-        navigate_through_points(master, points, initial_position)
+        initial_orientation = get_initial_orientation(master)
+        set_target_position(master, *initial_position, initial_position=initial_position, initial_orientation=initial_orientation)
+        rospy.sleep(5)  # Wait for 5 seconds to stabilize
+        rospy.loginfo("Initial position: %s", str(initial_position))
+        navigate_through_points(master, points, initial_position, initial_orientation)
         disarm_and_wait(master)
     except rospy.ROSInterruptException:
         disarm_and_wait(master)  # Disarm if interrupted
